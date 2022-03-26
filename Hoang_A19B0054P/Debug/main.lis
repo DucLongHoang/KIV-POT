@@ -1,0 +1,181 @@
+Renesas H8/300 GAS  C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s 			page 1
+
+
+   1              		.h8300s
+   2              	
+   3              		.equ	PUTS,0x114
+   4              		.equ	GETS,0x113
+   5              		.equ	syscall,0x1FF00
+   6              		
+   7              	; ----- datovy segment -------------------------
+   8              			.data
+   9 0000 00000000 	vstup:		.space	6
+   9      0000
+  10 0006 5A616465 	prompt:		.asciz	"Zadejte cislo uint16: "
+  10      6A746520 
+  10      6369736C 
+  10      6F207569 
+  10      6E743136 
+  11 001d 5A616461 	is_prime:	.ascii	"Zadane cislo je prvocislo.\n"
+  11      6E652063 
+  11      69736C6F 
+  11      206A6520 
+  11      7072766F 
+  12 0038 5A616461 	not_prime:	.ascii	"Zadane cislo neni prvocislo.\n"
+  12      6E652063 
+  12      69736C6F 
+  12      206E656E 
+  12      69207072 
+  13              		
+  14 0055 000000   			.align	2
+  15 0058 00000000 	par_vstup:		.long	vstup	;ukazatel na vstupni buffer
+  16 005c 00000000 	par_prompt:		.long	prompt	;ukazatel na vystupni buffer
+  17 0060 00000000 	par_isPrime:	.long	is_prime	;ukaz. na text is_prime
+  18 0064 00000000 	par_notPrime:	.long	not_prime	;ukaz. na text not_prime
+  19              		
+  20              			.align	1
+  21 0068 00000000 			.space	100
+  21      00000000 
+  21      00000000 
+  21      00000000 
+  21      00000000 
+  22              	stack:
+  23              	
+  24              	; ----- kodovy segment -------------------------
+  25              			.text
+  26              			.global _start
+  27              	
+  28              	; ----- podprogram: testovani na prvocislo
+  29              	testPrime:
+  30              				
+  31              	; ----- kontrola jestli vstup je 0 nebo 1
+  32 0000 79050002 		mov.w	#0x02,R5		;presun hodnoty 2 do registru R5
+  33 0004 1FD0     		cmp.l	ER5,ER0			;porovnani registru ER0 s ER5
+  34 0006 4D00     		blt	lab3				;pokud mensi, tak skoci do lab3
+  35              		
+  36              	; ----- kontrola zda cislo == 2
+  37 0008 79050002 		mov.w	#0x02,R5		;presun hodnoty 2 do registru R5 (neni nutny)
+  38 000c 1D50     		cmp.w	R5,R0			;porovnani zda registr R5 neni roven 2
+  39 000e 4700     		beq	lab2				;pokud ano, tak skok do lab2
+  40              		
+Renesas H8/300 GAS  C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s 			page 2
+
+
+  41              	; ----- kontrola sudosti zadaneho cisla
+  42 0010 0F84     		mov.l	ER0,ER4			;zkopirovani hodnoty registru ER0 do ER4
+  43 0012 5354     		divxu.w	R5,ER4			;vydeleni ER4(=vstupu) registrem R5(=2)
+  44 0014 792C0000 		cmp.w	#0x00,E4		;porovnani zbytku s 0
+  45 0018 4700     		beq	lab3				;pokud roven, tak do lab3
+  46              	
+  47              	; ----- test delenim
+  48 001a 79150001 			add.w	#0x01,R5	;pricteme 1 k R5 -> 2 + 1 = 3
+  49 001e 1D50     	loop:	cmp.w	R5,R0		;porovnani zda delitel == vstup
+  50 0020 4700     			beq	lab2			;pokud ano, tak je prvocislo a skok do lab2
+  51              			
+  52 0022 0F84     			mov.l ER0,ER4		;zkopirovani registru ER0(=vstup) do ER4
+  53 0024 5354     			divxu.w	R5,ER4		;deleni ER4 delitelem R5
+  54 0026 792C0000 			cmp.w	#0x0000,E4	;porovnani zbytku s 0
+  55 002a 4700     			beq	lab3			;kdyz zbytek == 0, tak neni prvocislo a skok do lab3
+  56 002c 0BD5     			inc.w	#0x02,R5	;zvyseni delitele o 2 (jen licha cisla)
+  57 002e 01F06544 			xor.l ER4,ER4		;vynulovani registru ER4
+  58 0032 5A000000 			jmp @loop			;skok na loop(=zacatek cyklu)
+  59              		
+  60              	; ----- zprava: je prvocislo	
+  61 0036 79000114 	lab2:	mov.w	#PUTS,R0	
+  62 003a 7A010000 		mov.l	#par_isPrime,ER1
+  62      0000
+  63 0040 5E000000 		jsr		@syscall
+  64 0044 5A000000 		jmp	@lab1
+  65              		
+  66              	; ----- zprava: neni prvocislo	
+  67 0048 79000114 	lab3:	mov.w	#PUTS,R0
+  68 004c 7A010000 		mov.l	#par_notPrime,ER1
+  68      0000
+  69 0052 5E000000 		jsr		@syscall
+  70 0056 5A000000 		jmp @lab1
+  71              		
+  72 005a 7A070000 	_start:	mov.l	#stack,ER7	;definovani stacku do ER7
+  72      0000
+  73              	
+  74 0060 79000114 		mov.w	#PUTS,R0		;kod fce do R0H a R0L
+  75 0064 7A010000 		mov.l	#par_prompt,ER1	;odkaz na par.blok do ER1
+  75      0000
+  76 006a 5E000000 		jsr		@syscall		;volani systemove fce
+  77              		
+  78 006e 79000113 		mov.w	#GETS,R0		;kod fce do R0H a R0L
+  79 0072 7A010000 		mov.l	#par_vstup,ER1	;odkaz na par.blok do ER1
+  79      0000
+  80 0078 5E000000 		jsr		@syscall		;volani systemove fce
+  81              	
+  82 007c 7A060000 		mov.l #vstup, ER6		;ulozeni vstupu do ER6
+  82      0000
+  83              		
+  84 0082 5E000000 		jsr @prevod				;skok do podprogramu prevod
+  85 0086 5E000000 		jsr @testPrime			;skok do podprogramu testPrime
+  86              		
+  87 008a 5A000000 	lab1:	jmp @lab1			;zacykleni, konec programu
+  88              	
+  89 008e 01006DF1 	prevod:	push.l ER1			;ulozeni registru
+  90 0092 01F06500 		xor.l ER0,ER0			;vynulovani ER0
+  91 0096 01F06511 		xor.l ER1,ER1			;vynulovani ER1
+Renesas H8/300 GAS  C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s 			page 3
+
+
+  92 009a 7909000A 		mov.w #10,E1			;ciselny zaklad = 10
+  93              		
+  94 009e 6869     	lab5:	mov.b @ER6,R1L		;cteni znaku z pameti
+  95 00a0 A90A     		cmp.b #0x0A,R1L			;test zda to neni konec retezce
+  96 00a2 4700     		beq lab6				;jestli je konec tak skok na lab6
+  97 00a4 89D0     		add.b #-'0',R1L			;odecteni '0' tedy (0x30)
+  98 00a6 5290     		mulxu.w E1,ER0			;ER0 = E1(=10) * ER0
+  99 00a8 0910     		add.w R1,R0				;R0 = R0 + R1
+ 100 00aa 0B76     		inc.l #1,ER6			;dalsi znak v retezci
+ 101 00ac 5A000000 		jmp @lab5				;skok na lab5
+ 102              		
+ 103 00b0 01006D71 	lab6:	pop.l ER1			;ziskani puvodni hodnoty registru
+ 104 00b4 5470     		rts						;navrat z podprogramu
+ 105              		
+ 106              		.end
+Renesas H8/300 GAS  C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s 			page 4
+
+
+DEFINED SYMBOLS
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:3      *ABS*:00000114 PUTS
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:4      *ABS*:00000113 GETS
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:5      *ABS*:0001ff00 syscall
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:9      .data:00000000 vstup
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:10     .data:00000006 prompt
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:11     .data:0000001d is_prime
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:12     .data:00000038 not_prime
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:15     .data:00000058 par_vstup
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:16     .data:0000005c par_prompt
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:17     .data:00000060 par_isPrime
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:18     .data:00000064 par_notPrime
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:22     .data:000000cc stack
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:72     .text:0000005a _start
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:29     .text:00000000 testPrime
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:32     .text:00000000 .L0
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:67     .text:00000048 lab3
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:61     .text:00000036 lab2
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:49     .text:0000001e loop
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:87     .text:0000008a lab1
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:89     .text:0000008e prevod
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:94     .text:0000009e lab5
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:103    .text:000000b0 lab6
+                            .text:00000000 .L0
+C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s:106    .text:000000b6 .L0
+
+NO UNDEFINED SYMBOLS
+
+
+==============================================================
+
+Listfile generated by KPIT GNUH8 [ELF]-v11.02 on Monday, September 14, 2020, 13:29:45
+
+Build options:
+
+"C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s"
+-I "C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P"
+--gdwarf2
+-o "C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\Debug\main.o"
+-alsh="C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\Debug\main.lis"

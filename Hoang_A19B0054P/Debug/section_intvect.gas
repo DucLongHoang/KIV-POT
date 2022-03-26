@@ -1,0 +1,5 @@
+"C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\section_intvect.s"
+-I "C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P"
+--gdwarf2
+-o "C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\Debug\section_intvect.o"
+-alsh="C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\Debug\section_intvect.lis"

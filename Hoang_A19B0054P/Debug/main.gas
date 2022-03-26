@@ -1,0 +1,5 @@
+"C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\main.s"
+-I "C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P"
+--gdwarf2
+-o "C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\Debug\main.o"
+-alsh="C:\WorkSpace\Hoang_A19B0054P\Hoang_A19B0054P\Debug\main.lis"
